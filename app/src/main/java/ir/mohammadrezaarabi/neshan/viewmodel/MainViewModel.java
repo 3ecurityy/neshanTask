@@ -40,10 +40,12 @@ public class MainViewModel extends AndroidViewModel {
     public MainViewModel(@NonNull Application application) {
         super(application);
         this.application = application;
+        initLocation();
     }
 
     public void startLocationUpdates() {
-        settingsClient.checkLocationSettings(locationSettingsRequest).addOnSuccessListener((Executor) this, new OnSuccessListener<LocationSettingsResponse>() {
+
+        settingsClient.checkLocationSettings(locationSettingsRequest).addOnSuccessListener(new OnSuccessListener<LocationSettingsResponse>() {
             @SuppressLint("MissingPermission")
             @Override
             public void onSuccess(LocationSettingsResponse locationSettingsResponse) {
@@ -53,7 +55,7 @@ public class MainViewModel extends AndroidViewModel {
         });
     }
 
-    public void initLocation() {
+    private void initLocation() {
         fusedLocationClient = LocationServices.getFusedLocationProviderClient(application.getApplicationContext());
         settingsClient = LocationServices.getSettingsClient(application.getApplicationContext());
 
