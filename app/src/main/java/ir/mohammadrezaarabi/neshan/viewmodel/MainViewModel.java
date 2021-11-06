@@ -20,7 +20,23 @@ import com.google.android.gms.location.LocationSettingsResponse;
 import com.google.android.gms.location.SettingsClient;
 import com.google.android.gms.tasks.OnSuccessListener;
 
-import java.util.concurrent.Executor;
+import org.neshan.common.model.LatLng;
+import org.neshan.common.utils.PolylineEncoding;
+import org.neshan.mapsdk.model.Polyline;
+import org.neshan.servicessdk.direction.NeshanDirection;
+import org.neshan.servicessdk.direction.model.DirectionStep;
+import org.neshan.servicessdk.direction.model.NeshanDirectionResult;
+import org.neshan.servicessdk.direction.model.Route;
+
+import java.util.ArrayList;
+
+import ir.mohammadrezaarabi.neshan.Helper;
+import ir.mohammadrezaarabi.neshan.model.NeshanAddress;
+import ir.mohammadrezaarabi.neshan.network.RetrofitClientInstance;
+import ir.mohammadrezaarabi.neshan.network.ReverseService;
+import retrofit2.Call;
+import retrofit2.Callback;
+import retrofit2.Response;
 
 public class MainViewModel extends AndroidViewModel {
     final int REQUEST_CODE = 123;
@@ -35,7 +51,13 @@ public class MainViewModel extends AndroidViewModel {
     private LocationCallback locationCallback;
     private final Application application;
 
-    private final MutableLiveData<Location> location = new MutableLiveData<Location>();
+    ArrayList<LatLng> decodedStepByStepPath;
+    private final MutableLiveData<Location> location = new MutableLiveData<>();
+    private final MutableLiveData<NeshanAddress> retrofitResponseAddress = new MutableLiveData<>();
+    private final MutableLiveData<Polyline> polyLineMap = new MutableLiveData<>();
+
+    public static final ReverseService getDataService = RetrofitClientInstance.getRetrofitInstance().create(ReverseService.class);
+
 
     public MainViewModel(@NonNull Application application) {
         super(application);
@@ -89,6 +111,53 @@ public class MainViewModel extends AndroidViewModel {
 
     public LiveData<Location> getCurrentLocation() {
         return location;
+    }
+
+    public LiveData<Polyline> getRoute() {
+        return polyLineMap;
+    }
+
+    public LiveData<NeshanAddress> getAddress() {
+        return retrofitResponseAddress;
+    }
+
+    public void neshanRoutingApi(LatLng start, LatLng end) {
+        new NeshanDirection.Builder("service.VNlPhrWb3wYRzEYmstQh3GrAXyhyaN55AqUSRR3V", start, end)
+                .build().call(new Callback<NeshanDirectionResult>() {
+            @Override
+            public void onResponse(Call<NeshanDirectionResult> call, Response<NeshanDirectionResult> response) {
+                Route route = response.body().getRoutes().get(0);
+                decodedStepByStepPath = new ArrayList<>();
+
+                for (DirectionStep step : route.getLegs().get(0).getDirectionSteps()) {
+                    decodedStepByStepPath.addAll(PolylineEncoding.decode(step.getEncodedPolyline()));
+                }
+                Polyline onMapPolyline = new Polyline(decodedStepByStepPath, new Helper().getLineStyle());
+                polyLineMap.setValue(onMapPolyline);
+            }
+
+            @Override
+            public void onFailure(Call<NeshanDirectionResult> call, Throwable t) {
+
+            }
+        });
+    }
+
+    public void getReverseApi(LatLng desLocation) {
+        getDataService.getReverse(desLocation.getLatitude(), desLocation.getLongitude()).enqueue(new Callback<NeshanAddress>() {
+            @Override
+            public void onResponse(Call<NeshanAddress> call, Response<NeshanAddress> response) {
+                String address = response.body().getAddress();
+                if (address != null && !address.isEmpty()) {
+                    retrofitResponseAddress.setValue(response.body());
+                } else {
+                    retrofitResponseAddress.setValue(response.body());
+                }
+            }
+            @Override
+            public void onFailure(Call<NeshanAddress> call, Throwable t) {
+            }
+        });
     }
 
 }
