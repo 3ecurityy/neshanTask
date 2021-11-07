@@ -34,7 +34,6 @@ public class MainActivity extends AppCompatActivity {
     // map UI element
     MapView map;
     ActivityMainBinding binding;
-    boolean canAddMarker = false;
     boolean startNavigation = false;
     LatLng latLngDestination;
     Helper helper = new Helper();
@@ -63,16 +62,15 @@ public class MainActivity extends AppCompatActivity {
             }
         });
 
+
+
         mViewModel = new ViewModelProvider(this).get(MainViewModel.class);
 
         mViewModel.getCurrentLocation().observe(this, item -> {
-            canAddMarker = true;
             binding.map.moveCamera(new LatLng(item.getLatitude(), item.getLongitude()), 0);
             binding.map.setZoom(14, 0);
+            binding.map.setMyLocationEnabled(true);
             UserLocation = new LatLng(item.getLatitude(), item.getLongitude());
-            userMarker = new Marker(new LatLng(item.getLatitude(), item.getLongitude()), helper.markerStyleUser(this));
-            binding.map.addMarker(userMarker);
-            Log.d("TAG", "Location is " + item.getLatitude() + " | " + item.getLongitude());
             mViewModel.getCurrentLocation().removeObservers(this);
         });
 

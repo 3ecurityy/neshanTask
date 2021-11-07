@@ -58,7 +58,6 @@ public class MainViewModel extends AndroidViewModel {
 
     public static final ReverseService getDataService = RetrofitClientInstance.getRetrofitInstance().create(ReverseService.class);
 
-
     public MainViewModel(@NonNull Application application) {
         super(application);
         this.application = application;
@@ -66,7 +65,6 @@ public class MainViewModel extends AndroidViewModel {
     }
 
     public void startLocationUpdates() {
-
         settingsClient.checkLocationSettings(locationSettingsRequest).addOnSuccessListener(new OnSuccessListener<LocationSettingsResponse>() {
             @SuppressLint("MissingPermission")
             @Override
@@ -154,6 +152,7 @@ public class MainViewModel extends AndroidViewModel {
                     retrofitResponseAddress.setValue(response.body());
                 }
             }
+
             @Override
             public void onFailure(Call<NeshanAddress> call, Throwable t) {
             }
